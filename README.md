@@ -12,7 +12,7 @@ MAVEN配置
   -->
 	<localRepository>E:\maven\repository</localRepository>
 ```
-###二、使用Nexus已经在局域网范围内架设了一个私有仓库服务器，地址为：
+###二、已经使用Nexus在局域网范围内架设了一个私有仓库服务器，地址为：
 ```url
 http://122.49.30.5:8981/nexus/content/groups/public
 ```
