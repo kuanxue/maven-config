@@ -1,2 +1,139 @@
-# maven-config
-maven 配置
+MAVEN配置
+===
+
+#settings.xml文件中：
+###一、修改本地的资源路径
+```xml
+  <!-- localRepository
+   | The path to the local repository maven will use to store artifacts.
+   |
+   | Default: ${user.home}/.m2/repository
+  <localRepository>/path/to/local/repo</localRepository>
+  -->
+	<localRepository>E:\maven\repository</localRepository>
+```
+###二、使用Nexus已经在局域网范围内架设了一个私有仓库服务器，地址为：
+```url
+http://122.49.30.5:8981/nexus/content/groups/public
+```
+
+###三、将中央仓库重写到配置文件中并进行激活：
+```xml
+ <profiles>
+		<profile>
+			<id>nexusProfile</id>
+			<repositories>
+				<repository>
+					<id>nexus</id>
+					<name>nexus</name>
+					<url>http://122.49.30.5:8981/nexus/content/groups/public/</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+				</repository>
+			</repositories>
+		</profile>
+		<profile>
+			<id>centralProfile</id>
+			<repositories>
+	    	<repository>
+	      <id>central</id>
+	      <name>Central Repository</name>
+	      <url>https://*</url>
+	      <layout>default</layout>
+	      <snapshots>
+	        <enabled>true</enabled>
+	      </snapshots>
+	    	</repository>
+  		</repositories>
+		</profile>
+	</profiles>
+	<activeProfiles>
+		<activeProfile>centralProfile</activeProfile>
+	</activeProfiles>
+```
+
+###四、建立一个镜像，将所有的profile都交给私有仓库管理。使得下载数据都去私有仓库服务器中下载，而私有仓库服务器再与中央仓库对接。
+```xml
+  <mirrors>
+    <mirror>
+      <id>nexusMirror</id>
+      <mirrorOf>*</mirrorOf>
+      <name>Human Readable Name for this Mirror.</name>
+      <url>http://122.49.30.5:8981/nexus/content/groups/public/</url>
+    </mirror>
+  </mirrors>
+```
+
+###五、根据项目发布需要，配置settings.xml中的文件中servers节点
+```xml
+  <servers>
+    <server>
+      <id>redis-release</id>
+      <username>deployment</username>
+      <password>deployment123</password>
+    </server>
+    <server>
+      <id>redis-snapshots</id>
+      <username>deployment</username>
+      <password>deployment123</password>
+    </server>
+  </servers>
+```
+
+#项目pom.xml文件中：
+###一、设置项目编码格式为UTF-8
+```xml
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+```
+###二、设置项目JDK
+```xml
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+```
+
+###三、添加相关依赖，例如：
+```xml
+<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+```
+
+###四、选择项目部署构件至Nexus私有仓库(mvn deploy),根据发布版本指向Nexus中的实际地址
+```xml
+	<distributionManagement>
+		<repository>
+			<id>redis-release</id>
+			<name>redis-release-version</name>
+			<url>http://122.49.30.5:8981/nexus/content/repositories/releases/
+			</url>
+		</repository>
+		<snapshotRepository>
+			<id>redis-snapshots</id>
+			<name>redis-snapshots-version</name>
+			<url>http://122.49.30.5:8981/nexus/content/repositories/snapshots/
+			</url>
+		</snapshotRepository>
+	</distributionManagement>
+```
